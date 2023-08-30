@@ -22,7 +22,7 @@ This version of vMenu was modified by [ioivox](https://github.com/ioivox) there 
 
 ## Download
 
-Click [here]([https://github.com/ioivox/vMenu/releases/) to go to the releases page and download it.
+Click [here](https://github.com/ioivox/vMenu/releases/) to go to the releases page and download it.
 
 --------
 
