@@ -12,6 +12,7 @@
 # vMenu
 vMenu is server sided menu for FiveM servers, including full\* permission support.
 
+This version of vMenu was modified by [ioivox](https://github.com/ioivox) there are credits put in place, nothing is copyrighted but it is asked that you do not remove the credits and try to claim this as your own version of vMenu. 
 
 \*(Some features do not have permissions support as they are either harmless or it'd just be silly to deny them. However, they will be disabled if you deny access to the submenu that they are a part of (eg: unlimited stamina in Player Options will be disabled if you deny `vMenu.PlayerOptions.Menu`.))
 
