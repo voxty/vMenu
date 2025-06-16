@@ -37,12 +37,14 @@ namespace vMenuServer
                 {
                     url = DISCORD_IMAGE
                 },
+                /*
                 footer = new
                 {
                     text = "© Peachtree Project",
                     icon_url = LogManager.DISCORD_IMAGE
                 },
                 timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                */
             };
 
 
