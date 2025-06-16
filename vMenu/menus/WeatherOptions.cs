@@ -123,11 +123,15 @@ namespace vMenuClient.menus
                 {
                     Notify.Custom($"Dynamic weather changes are now {(_checked ? "~g~enabled" : "~r~disabled")}~s~.");
                     UpdateServerWeather(EventManager.GetServerWeather, EventManager.IsBlackoutEnabled, _checked, EventManager.IsSnowEnabled);
+                    var logString = $"Dynamic weather {(_checked ? "enabled" : "disabled")} by " + Game.Player.Name + ". Current weather is: " + EventManager.GetServerWeather;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Dynamic Weather", logString, 2045380);
                 }
                 else if (item == blackout)
                 {
                     Notify.Custom($"Blackout mode is now {(_checked ? "~g~enabled" : "~r~disabled")}~s~.");
                     UpdateServerWeather(EventManager.GetServerWeather, _checked, EventManager.DynamicWeatherEnabled, EventManager.IsSnowEnabled);
+                    var logString = $"Blackout {(_checked ? "enabled" : "disabled")} by " + Game.Player.Name;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Blackout", logString, 2045380);
                 }
                 else if (item == snowEnabled)
                 {

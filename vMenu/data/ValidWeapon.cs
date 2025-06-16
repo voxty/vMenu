@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 
 using CitizenFX.Core;
+using CitizenFX.Core.Native;
 
 using Newtonsoft.Json;
 
@@ -73,7 +74,6 @@ namespace vMenuClient.data
             }
         }
 
-
         private static Dictionary<string, string> _components = new();
         public static Dictionary<string, string> GetWeaponComponents()
         {
@@ -84,21 +84,16 @@ namespace vMenuClient.data
                 try
                 {
                     var addonsFile = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(addons);
-                    if (addonsFile.ContainsKey("weapon_components"))
+
+                    if (addonsFile.TryGetValue("weapon_components", out var weaponComponents))
                     {
-                        foreach (var item in addonsFile["weapon_components"])
+                        foreach (var key in weaponComponents)
                         {
-                            var name = item;
-                            var displayName = GetLabelText(name) ?? name;
-                            var unused = 0;
-                            if (GetWeaponComponentHudStats((uint)GetHashKey(name), ref unused))
-                            {
-                                _components.Add(name, displayName);
-                            }
+                            _components[key] = key;
                         }
                     }
                 }
-                catch
+                catch (JsonException)
                 {
                     Log("[WARNING] The addons.json contains invalid JSON.");
                 }
@@ -113,32 +108,34 @@ namespace vMenuClient.data
             {
                 var realName = weapon.Key;
                 var localizedName = weapon.Value;
-                if (realName != "weapon_unarmed")
+                if (realName == "weapon_unarmed") continue;
+                var hash = (uint)GetHashKey(realName);
+                var componentHashes = new Dictionary<string, uint>();
+                var weaponComponents = GetWeaponComponents();
+                var weaponComponentKeys = weaponComponents.Keys;
+                foreach (var comp in weaponComponentKeys)
                 {
-                    var hash = (uint)GetHashKey(weapon.Key);
-                    var componentHashes = new Dictionary<string, uint>();
-                    foreach (var comp in GetWeaponComponents().Keys)
+                    var componentHash = (uint)GetHashKey(comp);
+                    if (DoesWeaponTakeWeaponComponent(hash, componentHash))
                     {
-                        if (DoesWeaponTakeWeaponComponent(hash, (uint)GetHashKey(comp)))
+                        var componentName = weaponComponents[comp];
+                        if (!componentHashes.ContainsKey(componentName))
                         {
-                            if (!componentHashes.ContainsKey(GetWeaponComponents()[comp]))
-                            {
-                                componentHashes.Add(GetWeaponComponents()[comp], (uint)GetHashKey(comp));
-                            }
+                            componentHashes[componentName] = componentHash;
                         }
                     }
-                    var vw = new ValidWeapon()
-                    {
-                        Hash = hash,
-                        SpawnName = realName,
-                        Name = localizedName,
-                        Components = componentHashes,
-                        Perm = weaponPermissions[realName]
-                    };
-                    if (!_weaponsList.Contains(vw))
-                    {
-                        _weaponsList.Add(vw);
-                    }
+                }
+                var vw = new ValidWeapon
+                {
+                    Hash = hash,
+                    SpawnName = realName,
+                    Name = localizedName,
+                    Components = componentHashes,
+                    Perm = weaponPermissions[realName]
+                };
+                if (!_weaponsList.Contains(vw))
+                {
+                    _weaponsList.Add(vw);
                 }
             }
         }
@@ -162,6 +159,20 @@ namespace vMenuClient.data
             { "weapon_bullpuprifle_mk2", GetLabelText("WTD_BULLRIFLE2") },
             { "weapon_bullpupshotgun", GetLabelText("WTD_SG_BLP") },
             { "weapon_bzgas", GetLabelText("WT_BZGAS") + "."},
+            { "weapon_fn509", GetLabelText("WEAPON_FN509") },
+            { "weapon_aks74", GetLabelText("WEAPON_AKS74") },
+            { "weapon_ar15", GetLabelText("WEAPON_AR15") },
+            { "weapon_m9a3", GetLabelText("WEAPON_M9A3") },
+            { "weapon_px4", GetLabelText("WEAPON_PX4") },
+            { "weapon_fiveseven", GetLabelText("WEAPON_FIVESEVEN") },
+            { "weapon_reming", GetLabelText("WEAPON_REMING") },
+            { "weapon_less", GetLabelText("WEAPON_LESS") },
+            { "weapon_p226", GetLabelText("WEAPON_P226") },
+            { "weapon_m17", GetLabelText("WEAPON_M17") },
+            { "weapon_taser7", GetLabelText("WEAPON_TASER7") },
+            { "weapon_g17", GetLabelText("WEAPON_G17") },
+            { "weapon_g20", GetLabelText("WEAPON_G20") },
+            { "weapon_mp", GetLabelText("WEAPON_MP") },
             { "weapon_carbinerifle", GetLabelText("WTD_RIFLE_CBN") },
             { "weapon_carbinerifle_mk2", GetLabelText("WTD_RIFLE_CBN2") },
             { "weapon_combatmg", GetLabelText("WTD_MG_CBT") },
@@ -259,6 +270,11 @@ namespace vMenuClient.data
             { "weapon_railgunxm3", GetLabelText("WTD_RAILGUNXM3") },
             // MP2023_01 DLC (V 2944)
             { "weapon_tecpistol", GetLabelText("WTD_TECPISTOL") },
+            // MP2023_02 DLC (V 3095)
+            { "weapon_battlerifle", GetLabelText("WTD_BATTLERIFLE") },
+            { "weapon_snowlauncher", GetLabelText("WTD_SNOWLNCHR") },
+            // MP2024_01 DLC (V 3258)
+            { "weapon_stunrod", GetLabelText("WTD_STUNROD") },
         };
 
         public static readonly Dictionary<string, string> weaponNames = new()
@@ -278,6 +294,20 @@ namespace vMenuClient.data
             { "weapon_bullpuprifle_mk2", GetLabelText("WT_BULLRIFLE2") },
             { "weapon_bullpupshotgun", GetLabelText("WT_SG_BLP") },
             { "weapon_bzgas", GetLabelText("WT_BZGAS") },
+            { "weapon_fn509", GetLabelText("WEAPON_FN509") },
+            { "weapon_aks74", GetLabelText("WEAPON_AKS74") },
+            { "weapon_ar15", GetLabelText("WEAPON_AR15") },
+            { "weapon_m9a3", GetLabelText("WEAPON_M9A3") },
+            { "weapon_px4", GetLabelText("WEAPON_PX4") },
+            { "weapon_fiveseven", GetLabelText("WEAPON_FIVESEVEN") },
+            { "weapon_reming", GetLabelText("WEAPON_REMING") },
+            { "weapon_less", GetLabelText("WEAPON_LESS") },
+            { "weapon_p226", GetLabelText("WEAPON_P226") },
+            { "weapon_m17", GetLabelText("WEAPON_M17") },
+            { "weapon_taser7", GetLabelText("WEAPON_TASER7") },
+            { "weapon_g17", GetLabelText("WEAPON_G17") },
+            { "weapon_g20", GetLabelText("WEAPON_G20") },
+            { "weapon_mp", GetLabelText("WEAPON_MP") },
             { "weapon_carbinerifle", GetLabelText("WT_RIFLE_CBN") },
             { "weapon_carbinerifle_mk2", GetLabelText("WT_RIFLE_CBN2") },
             { "weapon_combatmg", GetLabelText("WT_MG_CBT") },
@@ -376,6 +406,12 @@ namespace vMenuClient.data
             { "weapon_acidpackage", GetLabelText("WT_ACIDPACKAGE") },
             // MP2023_01 DLC (V 2944)
             { "weapon_tecpistol", GetLabelText("WT_TECPISTOL") },
+            // MP2023_02 DLC (V 3095)
+            { "weapon_battlerifle", GetLabelText("WT_BATTLERIFLE") },
+            { "weapon_snowlauncher", GetLabelText("WT_SNOWLNCHR") },
+            { "weapon_hackingdevice", GetLabelText("WT_HACKDEVICE") },
+            // MP2024_01 DLC (V 3258)
+            { "weapon_stunrod", GetLabelText("WT_STUNROD") },
         };
         #endregion
 
@@ -397,6 +433,21 @@ namespace vMenuClient.data
             ["weapon_bullpuprifle_mk2"] = Permission.WPBullpupRifleMk2,
             ["weapon_bullpupshotgun"] = Permission.WPBullpupShotgun,
             ["weapon_bzgas"] = Permission.WPBZGas,
+            ["weapon_fn509"] = Permission.WPFN,
+            ["weapon_aks74"] = Permission.WPAKS74,
+            ["weapon_ar15"] = Permission.WPAR15,
+            ["weapon_m9a3"] = Permission.WPM9A3,
+            ["weapon_px4"] = Permission.WPPX4,
+            ["weapon_fiveseven"] = Permission.WPFIVESEVEN,
+            ["weapon_taserx26"] = Permission.WPTASERX26,
+            ["weapon_reming"] = Permission.WPREMING,
+            ["weapon_less"] = Permission.WPLESS,
+            ["weapon_p226"] = Permission.WPP226,
+            ["weapon_m17"] = Permission.WPM17,
+            ["weapon_taser7"] = Permission.WPTASER7,
+            ["weapon_g17"] = Permission.WPG17,
+            ["weapon_g20"] = Permission.WPG20,
+            ["weapon_mp"] = Permission.WPMP,
             ["weapon_carbinerifle"] = Permission.WPCarbineRifle,
             ["weapon_carbinerifle_mk2"] = Permission.WPCarbineRifleMk2,
             ["weapon_combatmg"] = Permission.WPCombatMG,
@@ -495,6 +546,12 @@ namespace vMenuClient.data
             ["weapon_acidpackage"] = Permission.WPAcidPackage,
             // MP2023_01 DLC (V 2944)
             ["weapon_tecpistol"] = Permission.WPTecPistol,
+            // MP2023_02 DLC (V 3095)
+            ["weapon_battlerifle"] = Permission.WPBattleRifle,
+            ["weapon_snowlauncher"] = Permission.WPSnowLauncher,
+            ["weapon_hackingdevice"] = Permission.WPHackingDevice,
+            // MP2024_01 DLC (V 3258)
+            ["weapon_stunrod"] = Permission.WPStunRod,
         };
         #endregion
 
@@ -912,6 +969,14 @@ namespace vMenuClient.data
             ["COMPONENT_MICROSMG_VARMOD_FRN"] = GetLabelText("WCT_MSMGFRN_VAR"),
             ["COMPONENT_CARBINERIFLE_VARMOD_MICH"] = GetLabelText("WCT_CRBNMIC_VAR"),
             ["COMPONENT_RPG_VARMOD_TVR"] = GetLabelText("WCT_RPGTVR_VAR"),
+            // MP2023_02 DLC (V 3095)
+            ["COMPONENT_BATTLERIFLE_CLIP_01"] = GetLabelText("WCT_CLIP1"),
+            ["COMPONENT_BATTLERIFLE_CLIP_02"] = GetLabelText("WCT_CLIP2"),
+            ["COMPONENT_COMBATPISTOL_VARMOD_XMAS23"] = GetLabelText("WCT_COMPIST_XM"),
+            ["COMPONENT_SPECIALCARBINE_VARMOD_XMAS23"] = GetLabelText("WCT_SPCR_XM"),
+            ["COMPONENT_HEAVYSNIPER_VARMOD_XMAS23"] = GetLabelText("WCT_HVSP_XM"),
+            // MP2024_01 DLC (V 3258)
+            ["COMPONENT_STUNGUN_VARMOD_BAIL"] = GetLabelText("WCT_STNGN_BAIL"),
         };
         #endregion
 

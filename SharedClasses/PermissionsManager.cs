@@ -51,6 +51,8 @@ namespace vMenuShared
             PONoRagdoll,
             PONeverWanted,
             POSetWanted,
+            POClearBlood,
+            POSetBlood,
             POIgnored,
             POStayInVehicle,
             POMaxHealth,
@@ -99,6 +101,7 @@ namespace vMenuShared
             VOUnderglow,
             VOFlashHighbeamsOnHonk,
             VODisableTurbulence,
+            VOAnchorBoat,
             VOInfiniteFuel,
             VOFlares,
             VOPlaneBombs,
@@ -203,6 +206,21 @@ namespace vMenuShared
 
             //Weapons Permissions
             #region weapon specific permissions
+            WPFN,
+            WPAKS74,
+            WPAR15,
+            WPM9A3,
+            WPPX4,
+            WPFIVESEVEN,
+            WPTASERX26,
+            WPREMING,
+            WPLESS,
+            WPP226,
+            WPM17,
+            WPTASER7,
+            WPG17,
+            WPG20,
+            WPMP,
             WPAPPistol,
             WPAdvancedRifle,
             WPAssaultRifle,
@@ -317,7 +335,14 @@ namespace vMenuShared
             WPCandyCane,
             WPRailgunXM3,
             WPAcidPackage,
+            // MP2023_01 DLC (V 2944)
             WPTecPistol,
+            // MP2023_02 DLC (V 3095)
+            WPBattleRifle,
+            WPSnowLauncher,
+            WPHackingDevice,
+            // MP2024_01 DLC (V 3258)
+            WPStunRod,
             #endregion
 
             // Weapon Loadouts Menu
@@ -350,6 +375,7 @@ namespace vMenuShared
             MSRestoreWeapons,
             MSDriftMode,
             MSEntitySpawner,
+            MSDevTools,
             #endregion
 
             // Voice Chat
@@ -550,7 +576,7 @@ namespace vMenuShared
             player.TriggerEvent("vMenu:SetPermissions", Newtonsoft.Json.JsonConvert.SerializeObject(perms));
 
             // Also tell the client to do the addons setup.
-            player.TriggerEvent("vMenu:SetAddons");
+            player.TriggerEvent("vMenu:SetConfigOptions");
             player.TriggerEvent("vMenu:UpdateTeleportLocations", Newtonsoft.Json.JsonConvert.SerializeObject(ConfigManager.GetTeleportLocationsData()));
         }
 #endif

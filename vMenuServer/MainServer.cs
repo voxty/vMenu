@@ -232,6 +232,18 @@ namespace vMenuServer
                     Debug.WriteLine($"\n\n^1[vMenu] [ERROR] ^7Your addons.json file contains a problem! Error details: {ex.Message}\n\n");
                 }
 
+                // check extras file for errors
+                string extras = LoadResourceFile(GetCurrentResourceName(), "config/extras.json") ?? "{}";
+                try
+                {
+                    JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, string>>>(extras);
+                    // If the above crashes, then the json is invalid and it'll throw warnings in the console.
+                }
+                catch (JsonReaderException ex)
+                {
+                    Debug.WriteLine($"\n\n^1[vMenu] [ERROR] ^7Your extras.json file contains a problem! Error details: {ex.Message}\n\n");
+                }
+
                 // check if permissions are setup (correctly)
                 if (!GetSettingsBool(Setting.vmenu_use_permissions))
                 {
@@ -736,6 +748,8 @@ namespace vMenuServer
 
                         KickLog($"Player: {source.Name} has kicked: {targetPlayer.Name} for: {kickReason}.");
                         TriggerClientEvent(player: source, eventName: "vMenu:Notify", args: $"The target player (<C>{targetPlayer.Name}</C>) has been kicked.");
+                        var logString = "Player Kicked: " + targetPlayer.Name + "\nKicked By: " + source.Name + "\nReason: " + kickReason;
+                        TriggerEvent("vMenu:discordLogs", "vMenu: Kick", logString, 16711680);
 
                         // Kick the player from the server using the specified reason.
                         DropPlayer(targetPlayer.Handle, kickReason);
@@ -769,6 +783,8 @@ namespace vMenuServer
                 {
                     // Trigger the client event on the target player to make them kill themselves. R.I.P.
                     TriggerClientEvent(player: targetPlayer, eventName: "vMenu:KillMe", args: source.Name);
+                    var logString = "Player Killed: " + targetPlayer.Name + "\nKilled By By: " + source.Name;
+                    TriggerEvent("vMenu:discordLogs", "vMenu: Kill", logString, 16711680);
                     return;
                 }
                 TriggerClientEvent(player: source, eventName: "vMenu:Notify", args: "An unknown error occurred. Report it here: vespura.com/vmenu");
@@ -795,6 +811,8 @@ namespace vMenuServer
                 if (targetPlayer != null)
                 {
                     TriggerClientEvent(player: targetPlayer, eventName: "vMenu:GoToPlayer", args: source.Handle);
+                    var logString = "Player Summoned: " + targetPlayer.Name + "\nSummoned By: " + source.Name;
+                    TriggerEvent("vMenu:discordLogs", "vMenu: Summon", logString, 1752220);
                     return;
                 }
                 TriggerClientEvent(player: source, eventName: "vMenu:Notify", args: "An unknown error occurred. Report it here: vespura.com/vmenu");
@@ -812,6 +830,8 @@ namespace vMenuServer
             if (targetPlayer != null)
             {
                 targetPlayer.TriggerEvent("vMenu:PrivateMessage", source.Handle, message);
+                var logString = "Private Message: " + source.Name + " sent a message to: " + targetPlayer.Name + "\n" + message;
+                TriggerEvent("vMenu:discordLogs", "vMenu: Private Messaging", logString, 16705372);
 
                 foreach (var p in Players)
                 {

@@ -98,6 +98,8 @@ namespace vMenuClient.menus
                 {
                     Subtitle.Info($"Time will now {(EventManager.IsServerTimeFrozen ? "~y~continue" : "~o~freeze")}~s~.", prefix: "Info:");
                     UpdateServerTime(EventManager.GetServerHours, EventManager.GetServerMinutes, !EventManager.IsServerTimeFrozen);
+                    var logString = $"Time {(EventManager.IsServerTimeFrozen ? "unfrozen" : "frozen")} by " + Game.Player.Name + ". Current time is: " + EventManager.GetServerHours + ":" + EventManager.GetServerMinutes;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Time Freeze", logString, 3093151);
                 }
                 else
                 {
@@ -118,6 +120,8 @@ namespace vMenuClient.menus
                     Subtitle.Info($"Time set to ~y~{(newHour < 10 ? $"0{newHour}" : newHour.ToString())}~s~:~y~" +
                         $"{(newMinute < 10 ? $"0{newMinute}" : newMinute.ToString())}~s~.", prefix: "Info:");
                     UpdateServerTime(newHour, newMinute, EventManager.IsServerTimeFrozen);
+                    var logString = $"Time changed by " + Game.Player.Name + ". Current time is: " + newHour + ":" + newMinute;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Time Change", logString, 3093151);
                 }
 
             };
@@ -138,6 +142,8 @@ namespace vMenuClient.menus
                 Subtitle.Info($"Time set to ~y~{(newHour < 10 ? $"0{newHour}" : newHour.ToString())}~s~:~y~" +
                         $"{(newMinute < 10 ? $"0{newMinute}" : newMinute.ToString())}~s~.", prefix: "Info:");
                 UpdateServerTime(newHour, newMinute, EventManager.IsServerTimeFrozen);
+                var logString = $"Time changed by " + Game.Player.Name + ". Current time is: " + newHour + ":" + newMinute;
+                TriggerServerEvent("vMenu:discordLogs", "vMenu: Time Change", logString, 3093151);
             };
         }
 

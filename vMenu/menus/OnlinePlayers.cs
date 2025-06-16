@@ -200,6 +200,8 @@ namespace vMenuClient.menus
                                 SetBlipRoute(oldBlip, false);
                                 RemoveBlip(ref oldBlip);
                                 Notify.Custom($"~g~GPS route to ~s~<C>{GetSafePlayerName(currentPlayer.Name)}</C>~g~ is now disabled.");
+                                var logString = "GPS Tracking: " + GetSafePlayerName(currentPlayer.Name) + "\nTracked by: " + Game.Player.Name;
+                                TriggerServerEvent("vMenu:discordLogs", "vMenu: GPS Routing Off", logString, 11342935);
                             }
                         }
                         PlayersWaypointList.Clear();
@@ -236,6 +238,8 @@ namespace vMenuClient.menus
 
                             PlayersWaypointList.Add(currentPlayer.ServerId);
                             Notify.Custom($"~g~GPS route to ~s~<C>{GetSafePlayerName(currentPlayer.Name)}</C>~g~ is now active, press the ~s~Toggle GPS Route~g~ button again to disable the route.");
+                            var logString = "GPS Tracking: " + GetSafePlayerName(currentPlayer.Name) + "\nTracked by: " + Game.Player.Name;
+                            TriggerServerEvent("vMenu:discordLogs", "vMenu: GPS Routing On", logString, 15277667);
                         }
                         else
                         {

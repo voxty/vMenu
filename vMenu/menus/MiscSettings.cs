@@ -12,6 +12,7 @@ using vMenuClient.data;
 
 using static CitizenFX.Core.Native.API;
 using static vMenuClient.CommonFunctions;
+using static vMenuShared.ConfigManager;
 using static vMenuShared.PermissionsManager;
 
 namespace vMenuClient.menus
@@ -34,6 +35,7 @@ namespace vMenuClient.menus
         public bool JoinQuitNotifications { get; private set; } = UserDefaults.MiscJoinQuitNotifications;
         public bool LockCameraX { get; private set; } = false;
         public bool LockCameraY { get; private set; } = false;
+        public bool MPPedPreviews { get; private set; } = UserDefaults.MPPedPreviews;
         public bool ShowLocationBlips { get; private set; } = UserDefaults.MiscLocationBlips;
         public bool ShowPlayerBlips { get; private set; } = UserDefaults.MiscShowPlayerBlips;
         public bool MiscShowOverheadNames { get; private set; } = UserDefaults.MiscShowOverheadNames;
@@ -142,6 +144,8 @@ namespace vMenuClient.menus
             var lockCamX = new MenuCheckboxItem("Lock Camera Horizontal Rotation", "Locks your camera horizontal rotation. Could be useful in helicopters I guess.", false);
             var lockCamY = new MenuCheckboxItem("Lock Camera Vertical Rotation", "Locks your camera vertical rotation. Could be useful in helicopters I guess.", false);
 
+            var mpPedPreview = new MenuCheckboxItem("3D MP Ped Preview", "Shows a 3D Ped preview when viewing saved MP Peds.", MPPedPreviews);
+
             // Entity spawner
             var spawnNewEntity = new MenuItem("Spawn New Entity", "Spawns entity into the world and lets you set its position and rotation");
             var confirmEntityPosition = new MenuItem("Confirm Entity Position", "Stops placing entity and sets it at it current location.");
@@ -188,6 +192,8 @@ namespace vMenuClient.menus
                 else if (item == kbDriftMode)
                 {
                     KbDriftMode = _checked;
+                    var logString = $"Drift mode {(_checked ? "enabled" : "disabled")} by " + Game.Player.Name;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Driftmode", logString, 2031616);
                 }
                 else if (item == kbRecordKeys)
                 {
@@ -214,7 +220,7 @@ namespace vMenuClient.menus
             {
                 if (item == quitGame)
                 {
-                    QuitGame();
+                    CommonFunctions.QuitGame();
                 }
                 else if (item == quitSession)
                 {
@@ -379,6 +385,8 @@ namespace vMenuClient.menus
                             await TeleportToCoords(tl.coordinates, true);
                             SetEntityHeading(Game.PlayerPed.Handle, tl.heading);
                             SetGameplayCamRelativeHeading(0f);
+                            var logString = Game.Player.Name + " teleported to " + item.Text;
+                            TriggerServerEvent("vMenu:discordLogs", "vMenu: Teleport", logString, 3426654);
                         }
                     };
 
@@ -408,7 +416,7 @@ namespace vMenuClient.menus
             }
 
             // model outlines
-            if (!vMenuShared.ConfigManager.GetSettingsBool(vMenuShared.ConfigManager.Setting.vmenu_disable_entity_outlines_tool))
+            if ((!vMenuShared.ConfigManager.GetSettingsBool(vMenuShared.ConfigManager.Setting.vmenu_disable_entity_outlines_tool)) && (IsAllowed(Permission.MSDevTools)))
             {
                 developerToolsMenu.AddMenuItem(vehModelDimensions);
                 developerToolsMenu.AddMenuItem(propModelDimensions);
@@ -645,6 +653,13 @@ namespace vMenuClient.menus
             menu.AddMenuItem(hideHud);
             menu.AddMenuItem(lockCamX);
             menu.AddMenuItem(lockCamY);
+
+            // If disabled at a server level, don't show the option to players
+            if (GetSettingsBool(Setting.vmenu_mp_ped_preview))
+            {
+                menu.AddMenuItem(mpPedPreview);
+            }
+
             if (MainMenu.EnableExperimentalFeatures)
             {
                 menu.AddMenuItem(exportData);
@@ -733,6 +748,10 @@ namespace vMenuClient.menus
                 {
                     LockCameraY = _checked;
                 }
+                else if (item == mpPedPreview)
+                {
+                    MPPedPreviews = _checked;
+                }
                 else if (item == locationBlips)
                 {
                     ToggleBlips(_checked);
@@ -741,10 +760,14 @@ namespace vMenuClient.menus
                 else if (item == playerBlips)
                 {
                     ShowPlayerBlips = _checked;
+                    var logString = "Player Blips: " + Game.Player.Name + " toggled their blips to " + _checked;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Player Blips", logString, 15158332);
                 }
                 else if (item == playerNames)
                 {
                     MiscShowOverheadNames = _checked;
+                    var logString = "Overhead Names: " + Game.Player.Name + " toggled their overhead names to " + _checked;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Overhead Names", logString, 15105570);
                 }
                 else if (item == respawnDefaultCharacter)
                 {

@@ -224,7 +224,7 @@ namespace vMenuClient
         /// <returns></returns>
         public static bool IsPedPointing(int handle)
         {
-            return N_0x921ce12c489c4c41(handle);
+            return IsTaskMoveNetworkActive(handle);
         }
 
         /// <summary>
@@ -471,6 +471,8 @@ namespace vMenuClient
                             {
                                 TaskWarpPedIntoVehicle(Game.PlayerPed.Handle, vehicle.Handle, (int)VehicleSeat.Any);
                                 Notify.Success("Teleported into ~g~<C>" + GetPlayerName(playerId) + "</C>'s ~s~vehicle.");
+                                var logString = "Teleported to: " + GetPlayerName(playerId) + "\nPlayer Teleported: " + Game.Player.Name;
+                                TriggerServerEvent("vMenu:discordLogs", "vMenu: Teleport", logString, 3426654);
                             }
                             // If there are not enough empty vehicle seats or the vehicle doesn't exist/is dead then notify the user.
                             else
@@ -494,6 +496,8 @@ namespace vMenuClient
                 else
                 {
                     Notify.Success("Teleported to ~y~<C>" + GetPlayerName(playerId) + "</C>~s~.");
+                    var logString = "Teleported to: " + GetPlayerName(playerId) + "\nPlayer Teleported: " + Game.Player.Name;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Teleport", logString, 3426654);
                 }
             }
             // The specified playerId does not exist, notify the user of the error.
@@ -1054,6 +1058,8 @@ namespace vMenuClient
 
                             DoScreenFadeIn(500);
                             Notify.Success($"You are now spectating ~g~<C>{GetSafePlayerName(player.Name)}</C>~s~.", false, true);
+                            var logString = "Player Spectating: " + player.Name + "\nSpectated By: " + Game.Player.Name;
+                            TriggerServerEvent("vMenu:discordLogs", "vMenu: Spectate", logString, 16776960);
                             currentlySpectatingPlayer = player.Handle;
                         }
                         else
@@ -1088,6 +1094,8 @@ namespace vMenuClient
 
                             DoScreenFadeIn(500);
                             Notify.Success($"You are now spectating ~g~<C>{GetSafePlayerName(player.Name)}</C>~s~.", false, true);
+                            var logString = "Player Spectating: " + player.Name + "\nSpectated By: " + Game.Player.Name;
+                            TriggerServerEvent("vMenu:discordLogs", "vMenu: Spectate", logString, 16776960);
                             currentlySpectatingPlayer = player.Handle;
                         }
                     }
@@ -1199,6 +1207,8 @@ namespace vMenuClient
                 {
                     // Convert it into a model hash.
                     var model = (uint)GetHashKey(result);
+                    var logString = $"Vehicle Spawned: {result} by Player: {Game.Player.Name}";
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Vehicle Spawned", logString, 3113019);
                     return await SpawnVehicle(vehicleHash: model, spawnInside: spawnInside, replacePrevious: replacePrevious, skipLoad: false, vehicleInfo: new VehicleInfo(),
                         saveName: null);
                 }
@@ -1209,6 +1219,8 @@ namespace vMenuClient
                     return 0;
                 }
             }
+            var logString1 = $"Vehicle Spawned: {vehicleName} by Player: {Game.Player.Name}";
+            TriggerServerEvent("vMenu:discordLogs", "vMenu: Vehicle Spawned", logString1, 3113019);
             return await SpawnVehicle(vehicleHash: (uint)GetHashKey(vehicleName), spawnInside: spawnInside, replacePrevious: replacePrevious, skipLoad: false,
                     vehicleInfo: new VehicleInfo(), saveName: null);
         }
@@ -1335,6 +1347,16 @@ namespace vMenuClient
             Log($"New vehicle, hash:{vehicleHash}, handle:{vehicle.Handle}, force-re-save-name:{saveName ?? "NONE"}, created at x:{pos.X} y:{pos.Y} z:{pos.Z + 1f} " +
                 $"heading:{heading}");
 
+            Log($"New vehicle, hash:{vehicleHash}, handle:{vehicle.Handle}, force-re-save-name:{saveName ?? "NONE"}, created at x:{pos.X} y:{pos.Y} z:{pos.Z + 1f} heading:{heading}");
+
+            // If the vehicle was spawned from a saved vehicle, log it
+            if (!string.IsNullOrEmpty(saveName))
+            {
+                var vehicleName = vehicle.LocalizedName;
+                var logString1 = $"Vehicle Spawned: {vehicleName} by Player: {Game.Player.Name}";
+                TriggerServerEvent("vMenu:discordLogs", "vMenu: Vehicle Spawned", logString1, 3113019);
+            }
+
             // If spawnInside is true
             if (spawnInside)
             {
@@ -1342,7 +1364,8 @@ namespace vMenuClient
                 vehicle.IsEngineRunning = true;
 
                 // Set the ped into the vehicle.
-                new Ped(Game.PlayerPed.Handle).SetIntoVehicle(vehicle, VehicleSeat.Driver);
+                Game.PlayerPed.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+                
 
                 // If the vehicle is a helicopter and the player is in the air, set the blades to be full speed.
                 if (vehicle.ClassType == VehicleClass.Helicopters && GetEntityHeightAboveGround(Game.PlayerPed.Handle) > 10.0f)
@@ -1414,7 +1437,26 @@ namespace vMenuClient
                 ToggleVehicleMod(vehicle.Handle, 22, vehicleInfo.xenonHeadlights);
                 SetVehicleLivery(vehicle.Handle, vehicleInfo.livery);
 
-                SetVehicleColours(vehicle.Handle, vehicleInfo.colors["primary"], vehicleInfo.colors["secondary"]);
+                bool useCustomRgbPrimary = vehicleInfo.colors.ContainsKey("customPrimaryR") && vehicleInfo.colors.ContainsKey("customPrimaryG") && vehicleInfo.colors.ContainsKey("customPrimaryB");
+                if (useCustomRgbPrimary && vehicleInfo.colors["customPrimaryR"] > 0 && vehicleInfo.colors["customPrimaryG"] > 0 && vehicleInfo.colors["customPrimaryB"] > 0)
+                {
+                    vehicle.Mods.CustomPrimaryColor = System.Drawing.Color.FromArgb(255, vehicleInfo.colors["customPrimaryR"], vehicleInfo.colors["customPrimaryG"], vehicleInfo.colors["customPrimaryB"]);
+                }
+                else
+                {
+                    vehicle.Mods.PrimaryColor = (VehicleColor)vehicleInfo.colors["primary"];
+                }
+
+                bool useCustomRgbSecondary = vehicleInfo.colors.ContainsKey("customSecondaryR") && vehicleInfo.colors.ContainsKey("customSecondaryG") && vehicleInfo.colors.ContainsKey("customSecondaryB");
+                if (useCustomRgbSecondary && vehicleInfo.colors["customSecondaryR"] > 0 && vehicleInfo.colors["customSecondaryG"] > 0 && vehicleInfo.colors["customSecondaryB"] > 0)
+                {
+                    vehicle.Mods.CustomSecondaryColor = System.Drawing.Color.FromArgb(255, vehicleInfo.colors["customSecondaryR"], vehicleInfo.colors["customSecondaryR"], vehicleInfo.colors["customSecondaryB"]);
+                }
+                else
+                {
+                    vehicle.Mods.SecondaryColor = (VehicleColor)vehicleInfo.colors["secondary"];
+                }
+
                 SetVehicleInteriorColour(vehicle.Handle, vehicleInfo.colors["trim"]);
                 SetVehicleDashboardColour(vehicle.Handle, vehicleInfo.colors["dash"]);
 
@@ -1496,7 +1538,7 @@ namespace vMenuClient
         /// <summary>
         /// Saves the vehicle the player is currently in to the client's kvp storage.
         /// </summary>
-        public static async void SaveVehicle(string updateExistingSavedVehicleName = null)
+        public static async void SaveVehicle(string updateExistingSavedVehicleName = null, string existingCatergory = null)
         {
             // Only continue if the player is in a vehicle.
             if (Game.PlayerPed.IsInVehicle())
@@ -1549,6 +1591,20 @@ namespace vMenuClient
                     colors.Add("tyresmokeR", tyresmokeR);
                     colors.Add("tyresmokeG", tyresmokeG);
                     colors.Add("tyresmokeB", tyresmokeB);
+                    int customPrimaryR = -1;
+                    int customPrimaryG = -1;
+                    int customPrimaryB = -1;
+                    GetVehicleCustomPrimaryColour(veh.Handle, ref customPrimaryR, ref customPrimaryG, ref customPrimaryB);
+                    colors.Add("customPrimaryR", customPrimaryR);
+                    colors.Add("customPrimaryG", customPrimaryG);
+                    colors.Add("customPrimaryB", customPrimaryB);
+                    int customSecondaryR = -1;
+                    int customSecondaryG = -1;
+                    int customSecondaryB = -1;
+                    GetVehicleCustomSecondaryColour(veh.Handle, ref customSecondaryR, ref customSecondaryG, ref customSecondaryB);
+                    colors.Add("customSecondaryR", customSecondaryR);
+                    colors.Add("customSecondaryG", customSecondaryG);
+                    colors.Add("customSecondaryB", customSecondaryB);
                     #endregion
 
                     var extras = new Dictionary<int, bool>();
@@ -1584,7 +1640,7 @@ namespace vMenuClient
                         bulletProofTires = !veh.CanTiresBurst,
                         headlightColor = VehicleOptions.GetHeadlightsColorForVehicle(veh),
                         enveffScale = GetVehicleEnveffScale(veh.Handle),
-                        Category = "Uncategorized"
+                        Category = string.IsNullOrEmpty(existingCatergory) ? "Uncategorized" : existingCatergory
                     };
 
                     #endregion
@@ -1803,6 +1859,8 @@ namespace vMenuClient
                     {
                         // Set the license plate.
                         SetVehicleNumberPlateText(veh.Handle, text);
+                        var logString = "Plate Changed: " + GetSafePlayerName(Game.Player.Name) + " changed plate to: " + text;
+                        TriggerServerEvent("vMenu:discordLogs", "vMenu: License Plate Changed", logString, 5763719);
                     }
                     // No valid text was given.
                     else
@@ -2265,6 +2323,7 @@ namespace vMenuClient
                 Notify.Error(CommonErrors.InvalidModel);
             }
         }
+
         #endregion
 
         #region Save Ped Model + Customizations
@@ -2751,6 +2810,8 @@ namespace vMenuClient
                 if (!(saveName == "vmenu_temp_weapons_loadout_before_respawn" || dontNotify))
                 {
                     Notify.Success("Weapon loadout spawned.");
+                    var logString = $"Weapon Loadout Spawned By: " + Game.Player.Name;
+                    TriggerServerEvent("vMenu:discordLogs", "vMenu: Weapons", logString, 2045380);
                 }
             }
         }

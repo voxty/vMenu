@@ -15,6 +15,9 @@ namespace vMenuShared
         public enum Setting
         {
             // General settings
+            vmenu_discord_webhook,
+            vmenu_discord_username,
+            vmenu_discord_logo,
             vmenu_use_permissions,
             vmenu_menu_staff_only,
             vmenu_menu_toggle_key,
@@ -37,6 +40,9 @@ namespace vMenuShared
 
             // Vehicle Chameleon Colours
             vmenu_using_chameleon_colours,
+
+            // MP Ped preview setting,
+            vmenu_mp_ped_preview,
 
             // Kick & ban settings
             vmenu_default_ban_message_information,
@@ -61,6 +67,12 @@ namespace vMenuShared
             vmenu_current_hour,
             vmenu_current_minute,
             vmenu_sync_to_machine_time,
+
+            // Voice Chat Settings
+            vmenu_override_voicechat_default_range,
+
+            // Key Mapping
+            vmenu_keymapping_id,
         }
 
         /// <summary>
